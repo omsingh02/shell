@@ -13,56 +13,68 @@ ColumnLayout {
 
     required property PopoutState popouts
 
-    width: 300
+    width: 320
     spacing: Tokens.spacing.small
 
-    StyledText {
+    // Header Row
+    RowLayout {
+        Layout.fillWidth: true
         Layout.topMargin: Tokens.padding.medium
         Layout.rightMargin: Tokens.padding.extraSmall
-        text: qsTr("Music Recognition")
-        font: Tokens.font.body.builders.medium.weight(Font.Medium).build()
+        spacing: Tokens.spacing.small
+
+        MaterialIcon {
+            text: "graphic_eq"
+            color: Shazam.isListening ? Colours.palette.m3primary : Colours.palette.m3outline
+            fontStyle: Tokens.font.icon.medium
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            StyledText {
+                text: qsTr("Music Recognition")
+                font: Tokens.font.body.builders.medium.weight(Font.Bold).build()
+                color: Colours.palette.m3onSurface
+            }
+
+            StyledText {
+                text: Shazam.isListening ? (Shazam.hasSong ? qsTr("Track Detected") : qsTr("Listening actively...")) : qsTr("Recognition Paused")
+                font: Tokens.font.body.extraSmall
+                color: Shazam.isListening ? Colours.palette.m3primary : Colours.palette.m3outline
+            }
+        }
+
+        StyledSwitch {
+            checked: Shazam.isListening
+            onToggled: Shazam.toggle()
+        }
     }
 
-    Toggle {
-        label: qsTr("Listening")
-        checked: Shazam.isListening
-        toggle.onToggled: Shazam.toggle()
-    }
-
-    // Status / Now Recognized Section
-    StyledText {
-        Layout.topMargin: Tokens.spacing.small
-        Layout.rightMargin: Tokens.padding.extraSmall
-        text: Shazam.hasSong ? qsTr("Current Track") : (Shazam.isListening ? qsTr("Listening for ambient audio...") : qsTr("Recognition paused"))
-        color: Colours.palette.m3onSurfaceVariant
-        font: Tokens.font.body.small
-    }
-
-    // Active Recognized Track Card
+    // Now Recognized Hero Card
     StyledRect {
         visible: Shazam.hasSong
         Layout.fillWidth: true
-        Layout.preferredHeight: activeCol.implicitHeight + Tokens.padding.medium * 2
-        radius: Tokens.rounding.medium
+        Layout.topMargin: Tokens.spacing.extraSmall
+        radius: Tokens.rounding.large
         color: Colours.tPalette.m3surfaceContainerHigh
 
         ColumnLayout {
-            id: activeCol
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            id: currentCardCol
+            anchors.fill: parent
             anchors.margins: Tokens.padding.medium
-            spacing: Tokens.spacing.small
+            spacing: Tokens.spacing.medium
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.small
+                spacing: Tokens.spacing.medium
 
-                // Thumbnail Art or Icon
+                // Squircle Cover Artwork
                 StyledRect {
-                    Layout.preferredWidth: 44
-                    Layout.preferredHeight: 44
-                    radius: Tokens.rounding.small
+                    Layout.preferredWidth: 54
+                    Layout.preferredHeight: 54
+                    radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainerHighest
                     clip: true
 
@@ -78,18 +90,18 @@ ColumnLayout {
                         anchors.centerIn: parent
                         text: "music_note"
                         color: Colours.palette.m3primary
-                        fontStyle: Tokens.font.icon.medium
+                        fontStyle: Tokens.font.icon.large
                         visible: Shazam.artUrl.length === 0
                     }
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 0
+                    spacing: 2
 
                     StyledText {
                         text: Shazam.title
-                        font: Tokens.font.body.builders.small.weight(Font.Bold).build()
+                        font: Tokens.font.body.builders.medium.weight(Font.Bold).build()
                         color: Colours.palette.m3onSurface
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -97,8 +109,8 @@ ColumnLayout {
 
                     StyledText {
                         text: Shazam.artist
-                        font: Tokens.font.body.extraSmall
-                        color: Colours.palette.m3secondary
+                        font: Tokens.font.body.small
+                        color: Colours.palette.m3onSurfaceVariant
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                     }
@@ -114,13 +126,14 @@ ColumnLayout {
                 }
             }
 
+            // Action Buttons Row
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Tokens.spacing.extraSmall
+                spacing: Tokens.spacing.small
 
                 IconTextButton {
                     Layout.fillWidth: true
-                    text: Shazam.isDownloading ? qsTr("Downloading...") : qsTr("320kbps Download")
+                    text: Shazam.isDownloading ? qsTr("Downloading...") : qsTr("320k Download")
                     icon: Shazam.isDownloading ? "sync" : "download"
                     disabled: Shazam.isDownloading
                     onClicked: Shazam.downloadCurrent()
@@ -128,90 +141,166 @@ ColumnLayout {
 
                 IconButton {
                     visible: Shazam.previewUrl.length > 0
-                    icon: "play_arrow"
+                    icon: Shazam.isPreviewPlaying ? "stop" : "play_arrow"
                     type: IconButton.Tonal
+                    isRound: true
                     onClicked: Shazam.playPreview(Shazam.previewUrl)
+                }
+
+                IconButton {
+                    icon: "content_copy"
+                    type: IconButton.Tonal
+                    isRound: true
+                    onClicked: Shazam.copyTrackInfo(Shazam.title, Shazam.artist)
                 }
             }
         }
     }
 
-    // Recent History Section Header
-    StyledText {
-        visible: Shazam.history.length > 0
-        Layout.topMargin: Tokens.spacing.small
-        Layout.rightMargin: Tokens.padding.extraSmall
-        text: qsTr("Recent Recognitions")
-        color: Colours.palette.m3onSurfaceVariant
-        font: Tokens.font.body.small
-    }
-
-    // History Repeater
-    Repeater {
-        model: Shazam.history.slice(0, 4)
+    // Ambient Listening Wave Card (when listening and no track detected yet)
+    StyledRect {
+        visible: Shazam.isListening && !Shazam.hasSong
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.extraSmall
+        Layout.preferredHeight: 74
+        radius: Tokens.rounding.large
+        color: Colours.tPalette.m3surfaceContainerHigh
 
         RowLayout {
-            id: histRow
+            anchors.centerIn: parent
+            spacing: Tokens.spacing.medium
+
+            MaterialIcon {
+                text: "hearing"
+                color: Colours.palette.m3primary
+                fontStyle: Tokens.font.icon.large
+                animate: true
+            }
+
+            ColumnLayout {
+                spacing: 0
+
+                StyledText {
+                    text: qsTr("Listening for music...")
+                    font: Tokens.font.body.builders.small.weight(Font.Medium).build()
+                    color: Colours.palette.m3onSurface
+                }
+
+                StyledText {
+                    text: qsTr("Play audio near mic or on desktop")
+                    font: Tokens.font.body.extraSmall
+                    color: Colours.palette.m3outline
+                }
+            }
+        }
+    }
+
+    // Recent History Header
+    RowLayout {
+        visible: Shazam.history.length > 0
+        Layout.fillWidth: true
+        Layout.topMargin: Tokens.spacing.medium
+        Layout.rightMargin: Tokens.padding.extraSmall
+        spacing: Tokens.spacing.small
+
+        StyledText {
+            Layout.fillWidth: true
+            text: qsTr("Recent History")
+            color: Colours.palette.m3onSurfaceVariant
+            font: Tokens.font.body.builders.small.weight(Font.Medium).build()
+        }
+
+        StyledText {
+            text: qsTr("%1 tracks").arg(Math.min(Shazam.history.length, 5))
+            color: Colours.palette.m3outline
+            font: Tokens.font.body.extraSmall
+        }
+    }
+
+    // Recent History Items
+    Repeater {
+        model: Shazam.history.slice(0, 5)
+
+        StyledRect {
+            id: histItem
 
             required property var modelData
 
             Layout.fillWidth: true
-            Layout.rightMargin: Tokens.padding.extraSmall
-            spacing: Tokens.spacing.small
+            Layout.preferredHeight: 46
+            radius: Tokens.rounding.medium
+            color: stateLayer.hovered ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
-            MaterialIcon {
-                text: "music_note"
-                fontStyle: Tokens.font.icon.small
-                color: Colours.palette.m3secondary
+            StateLayer {
+                id: stateLayer
+                anchors.fill: parent
+                radius: Tokens.rounding.medium
+                onClicked: Shazam.copyTrackInfo(histItem.modelData.title ?? "", histItem.modelData.artist ?? "")
             }
 
-            ColumnLayout {
-                Layout.leftMargin: Tokens.spacing.extraSmall
-                Layout.rightMargin: Tokens.spacing.extraSmall
-                Layout.fillWidth: true
-                spacing: 0
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Tokens.padding.extraSmall
+                anchors.rightMargin: Tokens.padding.extraSmall
+                spacing: Tokens.spacing.small
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: histRow.modelData.title ?? ""
-                    font: Tokens.font.body.small
-                    color: Colours.palette.m3onSurface
-                    elide: Text.ElideRight
+                // Thumbnail Cover Art
+                StyledRect {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    radius: Tokens.rounding.small
+                    color: Colours.tPalette.m3surfaceContainerHigh
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: histItem.modelData.cover_art ?? ""
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: (histItem.modelData.cover_art ?? "").length > 0
+                    }
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "music_note"
+                        color: Colours.palette.m3secondary
+                        fontStyle: Tokens.font.icon.small
+                        visible: !(histItem.modelData.cover_art ?? "").length
+                    }
                 }
 
-                StyledText {
+                // Title + Artist
+                ColumnLayout {
                     Layout.fillWidth: true
-                    text: histRow.modelData.artist ?? ""
-                    font: Tokens.font.body.extraSmall
-                    color: Colours.palette.m3outline
-                    elide: Text.ElideRight
+                    spacing: 0
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: histItem.modelData.title ?? ""
+                        font: Tokens.font.body.builders.small.weight(Font.Medium).build()
+                        color: Colours.palette.m3onSurface
+                        elide: Text.ElideRight
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: histItem.modelData.artist ?? ""
+                        font: Tokens.font.body.extraSmall
+                        color: Colours.palette.m3outline
+                        elide: Text.ElideRight
+                    }
+                }
+
+                // Download Button for this track
+                IconButton {
+                    icon: "download"
+                    type: IconButton.Tonal
+                    isRound: true
+                    implicitWidth: 32
+                    implicitHeight: 32
+                    onClicked: Shazam.downloadTrack(histItem.modelData.title ?? "", histItem.modelData.artist ?? "")
                 }
             }
-
-            IconButton {
-                icon: "download"
-                type: IconButton.Tonal
-                onClicked: Shazam.downloadTrack(histRow.modelData.title ?? "", histRow.modelData.artist ?? "")
-            }
-        }
-    }
-
-    component Toggle: RowLayout {
-        required property string label
-        property alias checked: toggle.checked
-        property alias toggle: toggle
-
-        Layout.fillWidth: true
-        Layout.rightMargin: Tokens.padding.extraSmall
-        spacing: Tokens.spacing.medium
-
-        StyledText {
-            Layout.fillWidth: true
-            text: parent.label
-        }
-
-        StyledSwitch {
-            id: toggle
         }
     }
 }

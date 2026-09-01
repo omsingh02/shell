@@ -19,17 +19,19 @@ Singleton {
 
     property string status: !stateActive && !isListening ? "paused" : (hasSong ? "found" : "ambient")
 
-    readonly property bool hasSong: title.length > 0
+    readonly property bool hasSong: title.length > 0 && title !== "Shazam Active"
     property string title: ""
     property string artist: ""
     property string album: ""
     property string genre: ""
     property string artUrl: ""
     property string previewUrl: ""
+    property string shareUrl: ""
 
     property list<var> history: []
     property bool isDownloading: false
     property string downloadStatus: ""
+    property bool isPreviewPlaying: false
 
     function toggle(): void {
         toggleProc.running = true;
@@ -51,8 +53,21 @@ Singleton {
     function playPreview(url: string): void {
         let streamUrl = url || previewUrl;
         if (!streamUrl) return;
+        if (isPreviewPlaying) {
+            previewProc.terminate();
+            isPreviewPlaying = false;
+            return;
+        }
+        isPreviewPlaying = true;
         previewProc.command = ["mpv", "--no-video", "--volume=85", streamUrl];
         previewProc.running = true;
+    }
+
+    function copyTrackInfo(t: string, a: string): void {
+        let trackStr = `${a} - ${t}`;
+        copyProc.command = ["wl-copy", trackStr];
+        copyProc.running = true;
+        Notifs.toast("Shazam", `Copied to clipboard: ${trackStr}`, "edit-copy");
     }
 
     function reloadState(): void {
@@ -68,6 +83,11 @@ Singleton {
 
     Process {
         id: previewProc
+        onExited: root.isPreviewPlaying = false
+    }
+
+    Process {
+        id: copyProc
     }
 
     Process {
@@ -77,10 +97,10 @@ Singleton {
                 root.isDownloading = false;
                 if (text.includes("Saved to:")) {
                     root.downloadStatus = "done";
-                    Notifs.toast("Shazam", `✅ Downloaded: ${root.title}\nSaved to ~/Music/ShazamLive`, "audio-x-generic");
+                    Notifs.toast("Shazam", `✅ Downloaded to ~/Music/ShazamLive`, "audio-x-generic");
                 } else {
                     root.downloadStatus = "error";
-                    Notifs.toast("Shazam", `❌ Download failed: ${text.trim()}`, "dialog-error");
+                    Notifs.toast("Shazam", `❌ Download error: ${text.trim()}`, "dialog-error");
                 }
             }
         }
@@ -109,26 +129,38 @@ Singleton {
         }
     }
 
-    // Read full JSON history
+    // Read full JSON history & deduplicate consecutive identical tracks
     Process {
         id: historyProc
-        command: ["sh", "-c", "touch ~/.local/share/shazam_history.jsonl && tail -n 6 ~/.local/share/shazam_history.jsonl | tac"]
+        command: ["sh", "-c", "touch ~/.local/share/shazam_history.jsonl && tail -n 25 ~/.local/share/shazam_history.jsonl | tac"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
                     let lines = text.trim().split('\n').filter(l => l.length > 0);
                     let parsed = lines.map(JSON.parse);
-                    root.history = parsed;
+                    
+                    // Deduplicate consecutive identical tracks
+                    let deduped = [];
+                    for (let item of parsed) {
+                        if (deduped.length === 0 || 
+                            deduped[deduped.length - 1].title !== item.title || 
+                            deduped[deduped.length - 1].artist !== item.artist) {
+                            deduped.push(item);
+                        }
+                    }
 
-                    // Update artwork & album info from top history match if current song matches
-                    if (parsed.length > 0 && root.title.length > 0) {
-                        let match = parsed.find(item => item.title === root.title || item.artist === root.artist);
+                    root.history = deduped;
+
+                    // Update metadata & album art from top history entry matching current track
+                    if (deduped.length > 0 && root.title.length > 0) {
+                        let match = deduped.find(item => item.title === root.title || item.artist === root.artist) || deduped[0];
                         if (match) {
                             root.album = match.album || "";
                             root.genre = match.genre || "";
                             root.artUrl = match.cover_art || "";
                             root.previewUrl = match.preview_url || "";
+                            root.shareUrl = match.share_url || "";
                         }
                     }
                 } catch(e) {
@@ -138,9 +170,8 @@ Singleton {
         }
     }
 
-    // Periodic check to keep state in sync
     Timer {
-        interval: 1500
+        interval: 1200
         running: true
         repeat: true
         onTriggered: root.reloadState()
