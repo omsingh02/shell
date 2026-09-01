@@ -198,31 +198,20 @@ ColumnLayout {
         }
     }
 
-    // Recent History Header
-    RowLayout {
+    // History Header
+    StyledText {
         visible: Shazam.history.length > 0
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.medium
         Layout.rightMargin: Tokens.padding.extraSmall
-        spacing: Tokens.spacing.small
-
-        StyledText {
-            Layout.fillWidth: true
-            text: qsTr("Recent History")
-            color: Colours.palette.m3onSurfaceVariant
-            font: Tokens.font.body.builders.small.weight(Font.Medium).build()
-        }
-
-        StyledText {
-            text: qsTr("%1 tracks").arg(Math.min(Shazam.history.length, 5))
-            color: Colours.palette.m3outline
-            font: Tokens.font.body.extraSmall
-        }
+        text: qsTr("History")
+        color: Colours.palette.m3onSurfaceVariant
+        font: Tokens.font.body.builders.small.weight(Font.Medium).build()
     }
 
-    // Recent History Items
+    // History Items
     Repeater {
-        model: Shazam.history.slice(0, 5)
+        model: Shazam.history
 
         StyledRect {
             id: histItem
