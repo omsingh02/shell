@@ -209,16 +209,24 @@ ColumnLayout {
         font: Tokens.font.body.builders.small.weight(Font.Medium).build()
     }
 
-    // History Items
-    Repeater {
+    // Scrollable History List
+    ListView {
+        id: historyListView
+
+        visible: Shazam.history.length > 0
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.min(contentHeight, 220)
+        clip: true
+        spacing: Tokens.spacing.extraSmall
+        boundsBehavior: Flickable.StopAtBounds
         model: Shazam.history
 
-        StyledRect {
+        delegate: StyledRect {
             id: histItem
 
             required property var modelData
 
-            Layout.fillWidth: true
+            width: historyListView.width
             implicitHeight: 46
             radius: Tokens.rounding.medium
             color: stateLayer.hovered ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
