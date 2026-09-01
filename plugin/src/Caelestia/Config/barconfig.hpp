@@ -100,13 +100,14 @@ class BarConfig : public settings::ObjectNode {
     CONFIG_SUBOBJECT(BarClock, clock)
     CONFIG_LIST(EntryList, statusIcons,
         DEFAULT_ARG({
+            LIST_ENTRY(shazam, true),
             LIST_ENTRY(lockStatus, true),
-            LIST_ENTRY(audio, false),
-            LIST_ENTRY(microphone, false),
-            LIST_ENTRY(kbLayout, false),
+            LIST_ENTRY(audio, true),
+            LIST_ENTRY(microphone, true),
             LIST_ENTRY(network, true),
             LIST_ENTRY(bluetooth, true),
             LIST_ENTRY(battery, true),
+            LIST_ENTRY(kbLayout, false),
         }))
     CONFIG_LIST(EntryList, entries,
         DEFAULT_ARG({

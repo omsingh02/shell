@@ -80,46 +80,6 @@ StyledRect {
 
         spacing: 0
 
-        // Shazam Icon
-        Item {
-            id: shazamEntry
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: root.spacing / 2
-            Layout.bottomMargin: root.spacing / 2
-
-            implicitWidth: shazamIcon.implicitWidth
-            implicitHeight: shazamIcon.implicitHeight
-
-            MaterialIcon {
-                id: shazamIcon
-                animate: true
-                text: "music_note"
-                color: {
-                    if (root.shazamClass === "paused") return Colours.palette.m3onSurfaceVariant;
-                    if (root.shazamClass === "found") return Colours.palette.m3tertiary;
-                    return Colours.palette.m3primary;
-                }
-
-                scale: root.shazamClass === "ambient" ? pulseValue : (root.shazamClass === "found" ? 1.25 : 1.0)
-
-                property real pulseValue: 1.0
-                SequentialAnimation on pulseValue {
-                    running: root.shazamClass === "ambient"
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 1.18; duration: 900; easing.type: Easing.InOutQuad }
-                    NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
-                }
-
-                Behavior on scale {
-                    SpringAnimation { spring: 2.5; damping: 0.5 }
-                }
-
-                Behavior on color {
-                    ColorAnimation { duration: 300 }
-                }
-            }
-        }
-
         Repeater {
             model: ScriptModel {
                 id: model
@@ -131,8 +91,46 @@ StyledRect {
                 role: "id"
 
                 DelegateChoice {
+                    roleValue: "shazam"
+                    delegate: EntryWrapper {
+                        name: "shazam"
+                        margin: Tokens.spacing.extraSmall / 2
+
+                        MaterialIcon {
+                            id: shazamIcon
+                            animate: true
+                            text: "music_note"
+                            color: {
+                                if (root.shazamClass === "paused") return Colours.palette.m3onSurfaceVariant;
+                                if (root.shazamClass === "found") return Colours.palette.m3tertiary;
+                                return Colours.palette.m3primary;
+                            }
+
+                            scale: root.shazamClass === "ambient" ? pulseValue : (root.shazamClass === "found" ? 1.25 : 1.0)
+
+                            property real pulseValue: 1.0
+                            SequentialAnimation on pulseValue {
+                                running: root.shazamClass === "ambient"
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 1.18; duration: 900; easing.type: Easing.InOutQuad }
+                                NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }
+                            }
+
+                            Behavior on scale {
+                                SpringAnimation { spring: 2.5; damping: 0.5 }
+                            }
+
+                            Behavior on color {
+                                ColorAnimation { duration: 300 }
+                            }
+                        }
+                    }
+                }
+                DelegateChoice {
                     roleValue: "lockStatus"
                     delegate: EntryWrapper {
+                        name: "lockstatus"
+
                         LockStatus {
                             colour: root.colour
                             parentSpacing: root.spacing
@@ -142,6 +140,7 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "audio"
                     delegate: EntryWrapper {
+                        name: "audio"
                         margin: Tokens.spacing.extraSmall / 2
 
                         MaterialIcon {
@@ -156,8 +155,8 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "microphone"
                     delegate: EntryWrapper {
-                        margin: Tokens.spacing.extraSmall / 2
                         name: "audio" // Mic opens audio popout
+                        margin: Tokens.spacing.extraSmall / 2
 
                         MaterialIcon {
                             animate: true
@@ -171,6 +170,8 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "kbLayout"
                     delegate: EntryWrapper {
+                        name: "kblayout"
+
                         StyledText {
                             animate: true
                             text: Hypr.kbLayout
@@ -182,6 +183,8 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "network"
                     delegate: EntryWrapper {
+                        name: "network"
+
                         MaterialIcon {
                             animate: true
                             text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
@@ -192,6 +195,8 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "bluetooth"
                     delegate: EntryWrapper {
+                        name: "bluetooth"
+
                         BluetoothStatus {
                             colour: root.colour
                         }
@@ -200,6 +205,8 @@ StyledRect {
                 DelegateChoice {
                     roleValue: "battery"
                     delegate: EntryWrapper {
+                        name: "battery"
+
                         BatteryStatus {
                             colour: root.colour
                         }
