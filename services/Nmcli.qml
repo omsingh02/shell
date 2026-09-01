@@ -569,40 +569,18 @@ Singleton {
         }
     }
 
-<<<<<<< HEAD
-    function processSsidOutput(output: string): void {
+    function processSsidOutput(output: string, connectionName: string): void {
         const ssidPrefix = "802-11-wireless.ssid:";
         const keyMgmtPrefix = `${root.securityKeyMgmt}:`;
 
         let ssid = "";
         let keyMgmt = "";
-        for (const line of output.trim().split("\n")) {
+        for (const line of output.trim().split("
+")) {
             if (line.startsWith(ssidPrefix))
                 ssid = line.substring(ssidPrefix.length).trim();
             else if (line.startsWith(keyMgmtPrefix))
                 keyMgmt = line.substring(keyMgmtPrefix.length).trim();
-=======
-    function processSsidOutput(output: string, connectionName: string): void {
-        const lines = output.trim().split("\n");
-        for (const line of lines) {
-            if (line.startsWith("802-11-wireless.ssid:")) {
-                const ssid = line.substring("802-11-wireless.ssid:".length).trim();
-                if (ssid && ssid.length > 0) {
-                    const ssidLower = ssid.toLowerCase();
-                    const exists = root.savedConnectionSsids.some(s => s && s.toLowerCase() === ssidLower);
-                    if (!exists) {
-                        const newList = root.savedConnectionSsids.slice();
-                        newList.push(ssid);
-                        root.savedConnectionSsids = newList;
-                    }
-
-                    // Always update mapping (case-insensitive for lookup)
-                    const map = root.ssidToConnectionMap;
-                    map[ssid.toLowerCase().trim()] = connectionName;
-                    root.ssidToConnectionMap = map;
-                }
-            }
->>>>>>> 33fe15be (feat(custom): preserve shazam integration, caffeine toasts, nmcli/vpn fixes, and ui tweaks)
         }
 
         if (!ssid || ssid.length === 0)
@@ -615,6 +593,12 @@ Singleton {
             const newList = root.savedConnectionSsids.slice();
             newList.push(ssid);
             root.savedConnectionSsids = newList;
+        }
+
+        if (connectionName) {
+            const map = root.ssidToConnectionMap;
+            map[ssidLower] = connectionName;
+            root.ssidToConnectionMap = map;
         }
 
         const security = Object.assign({}, root.savedConnectionSecurity);

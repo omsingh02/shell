@@ -709,16 +709,11 @@ Singleton {
 
     Connections {
         target: Nmcli
-        enabled: root.enabled
-
-    Connections {
-        target: Nmcli
         enabled: root.selectedProvider.length > 0
 
         function onConnectionChanged(): void {
             statusCheckTimer.restart();
         }
-    }
     }
 
     Process {
