@@ -20,6 +20,17 @@ Singleton {
     property alias dnd: props.dnd
 
     property bool loaded
+    property bool caffeine: IdleInhibitor.enabled
+
+    onCaffeineChanged: {
+        if (!GlobalConfig.utilities.toasts.caffeineChanged)
+            return;
+
+        if (caffeine)
+            Toaster.toast(qsTr("Caffeine mode enabled"), qsTr("Preventing sleep mode"), "emoji_food_beverage");
+        else
+            Toaster.toast(qsTr("Caffeine mode disabled"), qsTr("Normal power management"), "local_cafe");
+    }
 
     function hasFullscreen(): bool {
         for (const monitor of Hypr.monitors.values) {

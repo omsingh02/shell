@@ -98,6 +98,11 @@ Item {
         }
 
         Popout {
+            name: "shazam"
+            sourceComponent: Shazam {}
+        }
+
+        Popout {
             name: "battery"
             sourceComponent: Battery {}
         }

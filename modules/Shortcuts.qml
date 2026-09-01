@@ -49,6 +49,14 @@ Scope {
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
+        name: "caffeine"
+        description: "Toggle caffeine mode"
+        onPressed: IdleInhibitor.enabled = !IdleInhibitor.enabled
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "session"
         description: "Toggle session menu"
         onPressed: {

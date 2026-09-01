@@ -23,6 +23,7 @@ Singleton {
     property list<string> savedConnectionSsids: []
     // Map of saved Wi-Fi SSID (lowercased) -> security type
     property var savedConnectionSecurity: ({})
+    property var ssidToConnectionMap: ({})
 
     property var wifiConnectionQueue: []
     property int currentSsidQueryIndex: 0
@@ -68,6 +69,7 @@ Singleton {
     readonly property string connectionParamHidden: "802-11-wireless.hidden"
 
     signal connectionFailed(string ssid)
+    signal connectionChanged()
 
     function detectPasswordRequired(error: string): bool {
         if (!error || error.length === 0) {
@@ -502,6 +504,7 @@ Singleton {
                 root.savedConnections = [];
                 root.savedConnectionSsids = [];
                 root.savedConnectionSecurity = {};
+                root.ssidToConnectionMap = {};
                 if (callback)
                     callback([]);
                 return;
@@ -537,6 +540,7 @@ Singleton {
             root.wifiConnectionQueue = wifiConnections;
             root.currentSsidQueryIndex = 0;
             root.savedConnectionSsids = [];
+            root.ssidToConnectionMap = {};
             queryNextSsid(callback);
         } else {
             root.savedConnectionSsids = [];
@@ -553,7 +557,7 @@ Singleton {
 
             executeCommand(["-t", "-f", `${root.wirelessSsidField},${root.securityKeyMgmt}`, root.nmcliCommandConnection, "show", connectionName], result => {
                 if (result.success) {
-                    processSsidOutput(result.output);
+                    processSsidOutput(result.output, connectionName);
                 }
                 queryNextSsid(callback);
             });
@@ -565,6 +569,7 @@ Singleton {
         }
     }
 
+<<<<<<< HEAD
     function processSsidOutput(output: string): void {
         const ssidPrefix = "802-11-wireless.ssid:";
         const keyMgmtPrefix = `${root.securityKeyMgmt}:`;
@@ -576,6 +581,28 @@ Singleton {
                 ssid = line.substring(ssidPrefix.length).trim();
             else if (line.startsWith(keyMgmtPrefix))
                 keyMgmt = line.substring(keyMgmtPrefix.length).trim();
+=======
+    function processSsidOutput(output: string, connectionName: string): void {
+        const lines = output.trim().split("\n");
+        for (const line of lines) {
+            if (line.startsWith("802-11-wireless.ssid:")) {
+                const ssid = line.substring("802-11-wireless.ssid:".length).trim();
+                if (ssid && ssid.length > 0) {
+                    const ssidLower = ssid.toLowerCase();
+                    const exists = root.savedConnectionSsids.some(s => s && s.toLowerCase() === ssidLower);
+                    if (!exists) {
+                        const newList = root.savedConnectionSsids.slice();
+                        newList.push(ssid);
+                        root.savedConnectionSsids = newList;
+                    }
+
+                    // Always update mapping (case-insensitive for lookup)
+                    const map = root.ssidToConnectionMap;
+                    map[ssid.toLowerCase().trim()] = connectionName;
+                    root.ssidToConnectionMap = map;
+                }
+            }
+>>>>>>> 33fe15be (feat(custom): preserve shazam integration, caffeine toasts, nmcli/vpn fixes, and ui tweaks)
         }
 
         if (!ssid || ssid.length === 0)
@@ -762,7 +789,10 @@ Singleton {
             return;
         }
 
-        const connectionName = root.savedConnections.find(conn => conn && conn.toLowerCase().trim() === ssid.toLowerCase().trim()) || ssid;
+        const ssidLower = ssid.toLowerCase().trim();
+        const connectionName = root.ssidToConnectionMap[ssidLower] ||
+                             root.savedConnections.find(conn => conn && conn.toLowerCase().trim() === ssidLower) ||
+                             ssid;
 
         executeCommand([root.nmcliCommandConnection, "delete", connectionName], result => {
             if (result.success) {
@@ -1657,7 +1687,10 @@ Singleton {
                 LC_ALL: "C.UTF-8"
             })
         stdout: SplitParser {
-            onRead: root.refreshOnConnectionChange()
+            onRead: {
+                root.refreshOnConnectionChange();
+                root.connectionChanged();
+            }
         }
         onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
     }

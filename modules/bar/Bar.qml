@@ -172,6 +172,14 @@ ColumnLayout {
                 }
             }
             DelegateChoice {
+                roleValue: "shazam"
+                delegate: EntryWrapper {
+                    Shazam {
+                        objectName: "taskbarShazam"
+                    }
+                }
+            }
+            DelegateChoice {
                 roleValue: "power"
                 delegate: EntryWrapper {
                     Power {

@@ -707,14 +707,18 @@ Singleton {
 
     // ── Generic engine ──────────────────────────────────────────────────────
 
-    Process {
-        id: nmMonitor
+    Connections {
+        target: Nmcli
+        enabled: root.enabled
 
-        running: root.selectedProvider.length > 0
-        command: ["nmcli", "monitor"]
-        stdout: SplitParser {
-            onRead: statusCheckTimer.restart()
+    Connections {
+        target: Nmcli
+        enabled: root.selectedProvider.length > 0
+
+        function onConnectionChanged(): void {
+            statusCheckTimer.restart();
         }
+    }
     }
 
     Process {
