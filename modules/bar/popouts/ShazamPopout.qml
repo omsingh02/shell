@@ -57,12 +57,15 @@ ColumnLayout {
         visible: Shazam.hasSong
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.extraSmall
+        implicitHeight: currentCardCol.implicitHeight + Tokens.padding.medium * 2
         radius: Tokens.rounding.large
         color: Colours.tPalette.m3surfaceContainerHigh
 
         ColumnLayout {
             id: currentCardCol
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: Tokens.padding.medium
             spacing: Tokens.spacing.medium
 
@@ -72,8 +75,8 @@ ColumnLayout {
 
                 // Squircle Cover Artwork
                 StyledRect {
-                    Layout.preferredWidth: 54
-                    Layout.preferredHeight: 54
+                    Layout.preferredWidth: 50
+                    Layout.preferredHeight: 50
                     radius: Tokens.rounding.medium
                     color: Colours.tPalette.m3surfaceContainerHighest
                     clip: true
@@ -97,7 +100,7 @@ ColumnLayout {
 
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 2
+                    spacing: 1
 
                     StyledText {
                         text: Shazam.title
@@ -116,7 +119,7 @@ ColumnLayout {
                     }
 
                     StyledText {
-                        visible: Shazam.album.length > 0
+                        visible: Shazam.album.length > 0 && Shazam.album !== Shazam.title
                         text: Shazam.album
                         font: Tokens.font.body.extraSmall
                         color: Colours.palette.m3outline
@@ -162,7 +165,7 @@ ColumnLayout {
         visible: Shazam.isListening && !Shazam.hasSong
         Layout.fillWidth: true
         Layout.topMargin: Tokens.spacing.extraSmall
-        Layout.preferredHeight: 74
+        implicitHeight: 74
         radius: Tokens.rounding.large
         color: Colours.tPalette.m3surfaceContainerHigh
 
@@ -227,7 +230,7 @@ ColumnLayout {
             required property var modelData
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 46
+            implicitHeight: 46
             radius: Tokens.rounding.medium
             color: stateLayer.hovered ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
 
