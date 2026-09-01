@@ -26,6 +26,7 @@ Singleton {
     property string genre: ""
     property string artUrl: ""
     property string previewUrl: ""
+    property string youtubeUrl: ""
     property string shareUrl: ""
 
     property list<var> history: []
@@ -63,6 +64,17 @@ Singleton {
         previewProc.running = true;
     }
 
+    function playVideo(t: string, a: string, ytUrl: string): void {
+        let titleQuery = t || root.title;
+        let artistQuery = a || root.artist;
+        let targetUrl = ytUrl || root.youtubeUrl;
+
+        let videoArg = targetUrl && targetUrl.length > 0 ? targetUrl : `ytdl://ytsearch1:${titleQuery} ${artistQuery} Official Music Video`;
+        videoProc.command = ["mpv", "--geometry=640x360-30+50", `--title=Official Video - ${titleQuery}`, videoArg];
+        videoProc.running = true;
+        Notifs.toast("Shazam", `🎬 Playing official video for ${titleQuery}`, "video-x-generic");
+    }
+
     function copyTrackInfo(t: string, a: string): void {
         let trackStr = `${a} - ${t}`;
         copyProc.command = ["wl-copy", trackStr];
@@ -84,6 +96,10 @@ Singleton {
     Process {
         id: previewProc
         onExited: root.isPreviewPlaying = false
+    }
+
+    Process {
+        id: videoProc
     }
 
     Process {
@@ -160,6 +176,7 @@ Singleton {
                             root.genre = match.genre || "";
                             root.artUrl = match.cover_art || "";
                             root.previewUrl = match.preview_url || "";
+                            root.youtubeUrl = match.youtube_url || "";
                             root.shareUrl = match.share_url || "";
                         }
                     }

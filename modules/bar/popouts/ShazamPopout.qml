@@ -142,6 +142,15 @@ ColumnLayout {
                     onClicked: Shazam.downloadCurrent()
                 }
 
+                // Official YouTube Video Playback Button
+                IconButton {
+                    icon: "smart_display"
+                    type: IconButton.Tonal
+                    isRound: true
+                    onClicked: Shazam.playVideo(Shazam.title, Shazam.artist, Shazam.youtubeUrl)
+                }
+
+                // 30s Audio Preview Button
                 IconButton {
                     visible: Shazam.previewUrl.length > 0
                     icon: Shazam.isPreviewPlaying ? "stop" : "play_arrow"
@@ -150,6 +159,7 @@ ColumnLayout {
                     onClicked: Shazam.playPreview(Shazam.previewUrl)
                 }
 
+                // Copy Info Button
                 IconButton {
                     icon: "content_copy"
                     type: IconButton.Tonal
@@ -291,13 +301,23 @@ ColumnLayout {
                     }
                 }
 
-                // Download Button for this track
+                // Video Playback Button
+                IconButton {
+                    icon: "smart_display"
+                    type: IconButton.Tonal
+                    isRound: true
+                    implicitWidth: 30
+                    implicitHeight: 30
+                    onClicked: Shazam.playVideo(histItem.modelData.title ?? "", histItem.modelData.artist ?? "", histItem.modelData.youtube_url ?? "")
+                }
+
+                // Download Button
                 IconButton {
                     icon: "download"
                     type: IconButton.Tonal
                     isRound: true
-                    implicitWidth: 32
-                    implicitHeight: 32
+                    implicitWidth: 30
+                    implicitHeight: 30
                     onClicked: Shazam.downloadTrack(histItem.modelData.title ?? "", histItem.modelData.artist ?? "")
                 }
             }
