@@ -99,7 +99,7 @@ Item {
 
         Popout {
             name: "shazam"
-            sourceComponent: Shazam {}
+            sourceComponent: ShazamPopout { popouts: root.popouts }
         }
 
         Popout {

@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Caelestia.Config
 import qs.components
 import qs.services
@@ -14,7 +13,6 @@ StyledRect {
     id: root
 
     property color colour: Colours.palette.m3secondary
-    property string shazamClass: "paused"
     readonly property alias items: iconColumn
 
     readonly property int spacing: Tokens.spacing.medium / 2
@@ -49,27 +47,6 @@ StyledRect {
     implicitWidth: Tokens.sizes.bar.innerWidth
     implicitHeight: iconColumn.implicitHeight + Tokens.padding.medium * 2
 
-    Process {
-        id: shazamProc
-        command: [Quickshell.env("HOME") + "/.local/bin/musicRecognition/shazam-waybar.sh"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    let data = JSON.parse(text);
-                    root.shazamClass = data.class || "paused";
-                } catch(e) {}
-            }
-        }
-    }
-
-    Timer {
-        interval: 5000
-        running: true
-        repeat: true
-        onTriggered: shazamProc.running = true
-    }
-
     ColumnLayout {
         id: iconColumn
 
@@ -101,16 +78,16 @@ StyledRect {
                             animate: true
                             text: "music_note"
                             color: {
-                                if (root.shazamClass === "paused") return Colours.palette.m3onSurfaceVariant;
-                                if (root.shazamClass === "found") return Colours.palette.m3tertiary;
+                                if (Shazam.status === "paused" || Shazam.status === "offline") return Colours.palette.m3onSurfaceVariant;
+                                if (Shazam.status === "found") return Colours.palette.m3tertiary;
                                 return Colours.palette.m3primary;
                             }
 
-                            scale: root.shazamClass === "ambient" ? pulseValue : (root.shazamClass === "found" ? 1.25 : 1.0)
+                            scale: Shazam.status === "ambient" ? pulseValue : (Shazam.status === "found" ? 1.25 : 1.0)
 
                             property real pulseValue: 1.0
                             SequentialAnimation on pulseValue {
-                                running: root.shazamClass === "ambient"
+                                running: Shazam.status === "ambient"
                                 loops: Animation.Infinite
                                 NumberAnimation { to: 1.18; duration: 900; easing.type: Easing.InOutQuad }
                                 NumberAnimation { to: 1.0; duration: 900; easing.type: Easing.InOutQuad }

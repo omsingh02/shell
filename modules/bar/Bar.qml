@@ -174,7 +174,7 @@ ColumnLayout {
             DelegateChoice {
                 roleValue: "shazam"
                 delegate: EntryWrapper {
-                    Shazam {
+                    ShazamIcon {
                         objectName: "taskbarShazam"
                     }
                 }
